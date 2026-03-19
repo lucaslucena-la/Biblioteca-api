@@ -1,0 +1,67 @@
+
+// Prisma Client generator utilizado pela camada de persistencia.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Fonte de dados PostgreSQL configurada por variavel de ambiente.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Entidade de persistencia para livros.
+model Livro {
+  id                 String       @id @default(uuid())
+  titulo             String
+  autor              String
+  isbn               String
+  isbnNormalizado    String
+  ano                Int
+  categoria          String
+  status             String
+  estadoConservacao  String
+  ativo              Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  emprestimos        Emprestimo[]
+
+  @@index([ativo])
+  @@index([titulo])
+  @@index([autor])
+  @@index([categoria])
+  @@index([isbnNormalizado])
+}
+
+// Entidade de persistencia para usuarios.
+model Usuario {
+  id          String       @id @default(uuid())
+  nome        String
+  email       String       @unique
+  ativo       Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  emprestimos Emprestimo[]
+
+  @@index([ativo])
+}
+
+// Entidade de persistencia para emprestimos.
+model Emprestimo {
+  id                   String   @id @default(uuid())
+  livroId              String
+  usuarioId            String
+  dataEmprestimo       DateTime @default(now())
+  dataPrevistaDevolucao DateTime @default(now())
+  dataDevolucaoReal    DateTime?
+  status               String   @default("ativo")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  livro   Livro   @relation(fields: [livroId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([livroId, status])
+  @@index([usuarioId, status])
+  @@index([status])
+}
