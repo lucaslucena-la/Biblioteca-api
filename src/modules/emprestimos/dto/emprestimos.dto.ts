@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // Define os tipos de dados (DTOs) para as operações relacionadas a empréstimos, como criação de empréstimo e registro de devolução, garantindo uma estrutura clara e consistente para as requisições e respostas da API.
 // DTOs (Data Transfer Objects) são usados para definir a forma dos dados que serão enviados e recebidos pela API, facilitando a validação e a documentação dos endpoints.
 
@@ -9,5 +11,14 @@ export type CreateEmprestimoDTO = {
 
 // DTO para registrar a devolução de um empréstimo, contendo a data real de devolução
 export type RegistrarDevolucaoDTO = {
-  dataDevolucaoReal: string;
+  dataDevolucaoReal?: string;
 };
+
+export const createEmprestimoSchema = z.object({
+  livroId: z.string().uuid(),
+  usuarioId: z.string().uuid()
+});
+
+export const registrarDevolucaoSchema = z.object({
+  dataDevolucaoReal: z.string().datetime().optional()
+});

@@ -155,6 +155,16 @@ const swaggerDefinition = {
       }
     },
     "/usuarios": {
+      get: {
+        summary: "Listar usuários",
+        description: "Retorna a lista de usuários ativos cadastrados.",
+        responses: {
+          "200": { description: "Sucesso" },
+          "400": { description: "Requisição inválida" },
+          "404": { description: "Não encontrado" },
+          "409": { description: "Conflito" }
+        }
+      },
       post: {
         summary: "Criar usuário",
         description: "Cria um novo usuário na biblioteca.",

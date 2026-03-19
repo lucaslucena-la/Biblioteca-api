@@ -1,8 +1,12 @@
 import { UsuarioEntity } from "../domain/usuario.entity";
 import { CreateUsuarioDTO } from "../dto/usuarios.dto";
+import { EmprestimoEntity } from "../../emprestimos/domain/emprestimo.entity";
 
 // Contrato da camada de persistencia para o modulo de usuarios.
 export interface IUsuariosRepository {
+  // Lista usuarios ativos.
+  findAll(): Promise<UsuarioEntity[]>;
+
   // Busca usuario ativo por ID.
   findById(id: string): Promise<UsuarioEntity | null>;
 
@@ -16,5 +20,5 @@ export interface IUsuariosRepository {
   findWithActiveLoans(id: string): Promise<{ usuario: UsuarioEntity | null; hasActiveLoans: boolean }>;
 
   // Lista historico de emprestimos vinculado ao usuario.
-  listHistoricoEmprestimos(usuarioId: string): Promise<unknown[]>;
+  listHistoricoEmprestimos(usuarioId: string): Promise<EmprestimoEntity[]>;
 }

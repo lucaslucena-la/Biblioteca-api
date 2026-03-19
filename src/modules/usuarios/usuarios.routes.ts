@@ -12,6 +12,7 @@ const usuariosController = new UsuariosController(usuariosService);
 
 export const usuariosRouter = Router();
 
+usuariosRouter.get("/", usuariosController.list);
 usuariosRouter.post("/", usuariosController.create);
 usuariosRouter.get("/:id", usuariosController.getById);
 usuariosRouter.get("/:id/historico-emprestimos", usuariosController.getHistoricoEmprestimos);

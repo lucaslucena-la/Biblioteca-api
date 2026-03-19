@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 import { UsuarioEntity } from "../domain/usuario.entity";
 import { CreateUsuarioDTO } from "../dto/usuarios.dto";
+import { EmprestimoEntity } from "../../emprestimos/domain/emprestimo.entity";
 import { IUsuariosRepository } from "./usuarios.repository";
 
 // Implementacao concreta do repositorio de usuarios usando Prisma.
@@ -23,6 +24,44 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
       createdAt: model.createdAt,
       updatedAt: model.updatedAt
     };
+  }
+
+  private toEmprestimoEntity(model: {
+    id: string;
+    livroId: string;
+    usuarioId: string;
+    dataEmprestimo: Date;
+    dataPrevistaDevolucao: Date;
+    dataDevolucaoReal: Date | null;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }): EmprestimoEntity {
+    return {
+      id: model.id,
+      livroId: model.livroId,
+      usuarioId: model.usuarioId,
+      dataEmprestimo: model.dataEmprestimo,
+      dataPrevistaDevolucao: model.dataPrevistaDevolucao,
+      dataDevolucaoReal: model.dataDevolucaoReal,
+      status: model.status,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt
+    };
+  }
+
+  // Lista usuarios ativos ordenados por data de criacao decrescente.
+  async findAll(): Promise<UsuarioEntity[]> {
+    const usuarios = await this.prismaClient.usuario.findMany({
+      where: {
+        ativo: true
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    return usuarios.map((usuario) => this.toEntity(usuario));
   }
 
   // Busca usuario ativo por identificador.
@@ -96,8 +135,8 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
   }
 
   // Busca historico simples de emprestimos do usuario.
-  async listHistoricoEmprestimos(usuarioId: string): Promise<unknown[]> {
-    return this.prismaClient.emprestimo.findMany({
+  async listHistoricoEmprestimos(usuarioId: string): Promise<EmprestimoEntity[]> {
+    const emprestimos = await this.prismaClient.emprestimo.findMany({
       where: {
         usuarioId
       },
@@ -105,5 +144,7 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
         createdAt: "desc"
       }
     });
+
+    return emprestimos.map((emprestimo) => this.toEmprestimoEntity(emprestimo));
   }
 }

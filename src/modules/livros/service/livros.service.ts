@@ -1,6 +1,6 @@
 import { LivroEntity } from "../domain/livro.entity";
-import { CreateLivroDTO, UpdateLivroDTO } from "../dto/livros.dto";
-import { ILivrosRepository } from "../repository/livros.repository";
+import { CreateLivroDTO, ListLivrosFiltersDTO, UpdateLivroDTO } from "../dto/livros.dto";
+import { ILivrosRepository, FindAllLivrosFilters } from "../repository/livros.repository";
 import { AppError } from "../../../shared/errors/app-error";
 
 export class LivrosService {
@@ -43,19 +43,48 @@ export class LivrosService {
   }
 
   // Lista livros com leitura simples sem regras de negocio.
-  async listLivros(): Promise<LivroEntity[]> {
-    return this.livrosRepository.findAll();
+  async listLivros(filters?: ListLivrosFiltersDTO): Promise<LivroEntity[]> {
+    const repositoryFilters: FindAllLivrosFilters | undefined = filters
+      ? {
+          titulo: filters.titulo,
+          autor: filters.autor,
+          categoria: filters.categoria,
+          status: filters.status
+        }
+      : undefined;
+
+    return this.livrosRepository.findAll(repositoryFilters);
   }
 
   // Busca livro por identificador.
-  async getLivroById(id: string): Promise<LivroEntity | null> {
-    return this.livrosRepository.findById(id);
+  async getLivroById(id: string): Promise<LivroEntity> {
+    const livro = await this.livrosRepository.findById(id);
+
+    if (!livro) {
+      throw new AppError({
+        message: "Livro nao encontrado",
+        code: "LIVRO_NAO_ENCONTRADO",
+        statusCode: 404
+      });
+    }
+
+    return livro;
   }
 
   // Atualiza campos de livro.
-  async updateLivro(id: string, payload: UpdateLivroDTO): Promise<LivroEntity | null> {
+  async updateLivro(id: string, payload: UpdateLivroDTO): Promise<LivroEntity> {
     try {
-      return await this.livrosRepository.update(id, payload);
+      const livro = await this.livrosRepository.update(id, payload);
+
+      if (!livro) {
+        throw new AppError({
+          message: "Livro nao encontrado",
+          code: "LIVRO_NAO_ENCONTRADO",
+          statusCode: 404
+        });
+      }
+
+      return livro;
     } catch (error) {
       this.mapLivroPersistenceError(error);
     }
@@ -63,6 +92,16 @@ export class LivrosService {
 
   // Remove livro via operacao de repositorio (soft delete na infraestrutura).
   async deleteLivro(id: string): Promise<void> {
+    const livro = await this.livrosRepository.findById(id);
+
+    if (!livro) {
+      throw new AppError({
+        message: "Livro nao encontrado",
+        code: "LIVRO_NAO_ENCONTRADO",
+        statusCode: 404
+      });
+    }
+
     return this.livrosRepository.delete(id);
   }
 }
