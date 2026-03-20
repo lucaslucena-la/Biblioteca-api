@@ -24,6 +24,10 @@ export function createApp() {
     return response.redirect(destination);
   });
 
+  app.get("/swagger.json", (_request, response) => {
+    return response.json(swaggerSpec);
+  });
+
   app.use(SWAGGER_ROUTE, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.use("/api", mainRouter);
 
