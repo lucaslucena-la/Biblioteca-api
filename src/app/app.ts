@@ -6,6 +6,7 @@ import { mainRouter } from "./routes";
 import { swaggerSpec } from "../config/swagger";
 import { errorHandler } from "../shared/middleware/error-handler";
 import { notFoundHandler } from "../shared/middleware/not-found";
+import { requestIdMiddleware } from "../shared/middleware/request-id";
 
 const SWAGGER_ROUTE = "/api-docs";
 
@@ -16,6 +17,7 @@ export function createApp() {
 
   app.use(cors());
   app.use(express.json());
+  app.use(requestIdMiddleware);
 
   app.get("/", (request, response) => {
     const host = request.headers.host ?? "localhost:3000";
