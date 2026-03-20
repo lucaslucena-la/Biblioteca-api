@@ -7,14 +7,24 @@ import { swaggerSpec } from "../config/swagger";
 import { errorHandler } from "../shared/middleware/error-handler";
 import { notFoundHandler } from "../shared/middleware/not-found";
 
+const SWAGGER_ROUTE = "/api-docs";
+
 // Esta função cria e configura a aplicação Express, definindo os middlewares e rotas necessários.
 export function createApp() {
   const app = express();
+  app.set("trust proxy", 1);
 
   app.use(cors());
   app.use(express.json());
 
-  app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get("/", (request, response) => {
+    const host = request.headers.host ?? "localhost:3000";
+    const destination = `${request.protocol}://${host}${SWAGGER_ROUTE}`;
+
+    return response.redirect(destination);
+  });
+
+  app.use(SWAGGER_ROUTE, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.use("/api", mainRouter);
 
   app.use(notFoundHandler);

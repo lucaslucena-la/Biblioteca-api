@@ -1,5 +1,7 @@
 import swaggerJSDoc from "swagger-jsdoc";
 
+const baseUrl = process.env.API_URL || "http://localhost:3000";
+
 const swaggerDefinition = {
   openapi: "3.0.0",
   info: {
@@ -9,9 +11,10 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: "http://localhost:3000/api"
+      url: `${baseUrl}/api`
     }
   ],
+  security: [{ bearerAuth: [] }],
   components: {
     securitySchemes: {
       bearerAuth: {
@@ -127,6 +130,7 @@ const swaggerDefinition = {
       post: {
         summary: "Registrar novo usuário",
         description: "Cria conta de usuário com senha e retorna JWT de autenticação.",
+        security: [],
         requestBody: {
           required: true,
           content: {
@@ -146,6 +150,7 @@ const swaggerDefinition = {
       post: {
         summary: "Autenticar usuário",
         description: "Realiza login com email e senha e retorna JWT.",
+        security: [],
         requestBody: {
           required: true,
           content: {
@@ -165,7 +170,6 @@ const swaggerDefinition = {
       get: {
         summary: "Consultar usuário autenticado",
         description: "Retorna os dados do usuário autenticado a partir do token JWT.",
-        security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Sucesso" },
           "401": { description: "Não autorizado" }
@@ -176,6 +180,7 @@ const swaggerDefinition = {
       get: {
         summary: "Listar livros",
         description: "Retorna a lista de livros cadastrados, com filtros opcionais.",
+        security: [],
         parameters: [
           { in: "query", name: "titulo", schema: { type: "string" }, required: false },
           { in: "query", name: "autor", schema: { type: "string" }, required: false },
@@ -192,7 +197,6 @@ const swaggerDefinition = {
       post: {
         summary: "Criar livro",
         description: "Cria um novo livro no catálogo.",
-        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -215,6 +219,7 @@ const swaggerDefinition = {
       get: {
         summary: "Consultar livro por ID",
         description: "Retorna os detalhes de um livro específico.",
+        security: [],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         responses: {
           "200": { description: "Sucesso" },
@@ -226,7 +231,6 @@ const swaggerDefinition = {
       put: {
         summary: "Atualizar livro",
         description: "Atualiza os dados de um livro existente.",
-        security: [{ bearerAuth: [] }],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         requestBody: {
           required: true,
@@ -248,7 +252,6 @@ const swaggerDefinition = {
       delete: {
         summary: "Remover livro",
         description: "Realiza remoção lógica de um livro.",
-        security: [{ bearerAuth: [] }],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         responses: {
           "200": { description: "Removido com sucesso" },
@@ -264,6 +267,7 @@ const swaggerDefinition = {
       get: {
         summary: "Listar usuários",
         description: "Retorna a lista de usuários ativos cadastrados.",
+        security: [],
         responses: {
           "200": { description: "Sucesso" },
           "400": { description: "Requisição inválida" },
@@ -274,6 +278,7 @@ const swaggerDefinition = {
       post: {
         summary: "Criar usuário",
         description: "Cria um novo usuário na biblioteca.",
+        security: [],
         requestBody: {
           required: true,
           content: {
@@ -295,6 +300,7 @@ const swaggerDefinition = {
       get: {
         summary: "Consultar perfil do usuário",
         description: "Retorna os dados de perfil de um usuário.",
+        security: [],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         responses: {
           "200": { description: "Sucesso" },
@@ -306,6 +312,7 @@ const swaggerDefinition = {
       delete: {
         summary: "Remover usuário",
         description: "Realiza remoção lógica de um usuário.",
+        security: [],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         responses: {
           "200": { description: "Removido com sucesso" },
@@ -319,6 +326,7 @@ const swaggerDefinition = {
       get: {
         summary: "Listar histórico de empréstimos do usuário",
         description: "Retorna o histórico de empréstimos de um usuário.",
+        security: [],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         responses: {
           "200": { description: "Sucesso" },
@@ -332,7 +340,6 @@ const swaggerDefinition = {
       post: {
         summary: "Criar empréstimo",
         description: "Cria um novo empréstimo com base no livro e usuário informados.",
-        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -353,7 +360,6 @@ const swaggerDefinition = {
       get: {
         summary: "Listar empréstimos ativos",
         description: "Retorna a lista de empréstimos com status ativo.",
-        security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Sucesso" },
           "400": { description: "Requisição inválida" },
@@ -367,7 +373,6 @@ const swaggerDefinition = {
       post: {
         summary: "Registrar devolução",
         description: "Registra a devolução de um empréstimo ativo.",
-        security: [{ bearerAuth: [] }],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         requestBody: {
           required: false,
@@ -392,7 +397,7 @@ const swaggerDefinition = {
 
 const options: swaggerJSDoc.Options = {
   definition: swaggerDefinition,
-  apis: []
+  apis: ["./src/modules/**/*.routes.ts", "./src/app/routes/**/*.ts"]
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
