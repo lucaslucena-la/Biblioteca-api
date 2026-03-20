@@ -1,6 +1,12 @@
-import { UsuarioEntity } from "../domain/usuario.entity";
-import { CreateUsuarioDTO } from "../dto/usuarios.dto";
+import { UsuarioAuthEntity, UsuarioEntity, UserRole } from "../domain/usuario.entity";
 import { EmprestimoEntity } from "../../emprestimos/domain/emprestimo.entity";
+
+export type CreateUsuarioRepositoryDTO = {
+  nome: string;
+  email: string;
+  senha: string;
+  role: UserRole;
+};
 
 // Contrato da camada de persistencia para o modulo de usuarios.
 export interface IUsuariosRepository {
@@ -11,7 +17,7 @@ export interface IUsuariosRepository {
   findById(id: string): Promise<UsuarioEntity | null>;
 
   // Cria um novo registro de usuario.
-  create(payload: CreateUsuarioDTO): Promise<UsuarioEntity>;
+  create(payload: CreateUsuarioRepositoryDTO): Promise<UsuarioEntity>;
 
   // Realiza soft delete de usuario.
   delete(id: string): Promise<void>;
@@ -21,4 +27,7 @@ export interface IUsuariosRepository {
 
   // Lista historico de emprestimos vinculado ao usuario.
   listHistoricoEmprestimos(usuarioId: string): Promise<EmprestimoEntity[]>;
+
+  // Busca usuario ativo por email para autenticacao.
+  findByEmail(email: string): Promise<UsuarioAuthEntity | null>;
 }

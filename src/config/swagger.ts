@@ -13,7 +13,19 @@ const swaggerDefinition = {
     }
   ],
   components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT"
+      }
+    },
     schemas: {
+      Role: {
+        type: "string",
+        enum: ["USER", "LIBRARIAN"],
+        example: "USER"
+      },
       ApiSuccess: {
         type: "object",
         properties: {
@@ -52,10 +64,46 @@ const swaggerDefinition = {
       },
       UsuarioInput: {
         type: "object",
-        required: ["nome", "email"],
+        required: ["nome", "email", "senha"],
         properties: {
           nome: { type: "string", example: "Ana Silva" },
-          email: { type: "string", example: "ana@biblioteca.local" }
+          email: { type: "string", example: "ana@biblioteca.local" },
+          senha: { type: "string", minLength: 8, example: "Senha@123" }
+        }
+      },
+      UsuarioResponse: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          nome: { type: "string", example: "Ana Silva" },
+          email: { type: "string", format: "email", example: "ana@biblioteca.local" },
+          role: { $ref: "#/components/schemas/Role" },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" }
+        }
+      },
+      AuthRegisterInput: {
+        type: "object",
+        required: ["nome", "email", "senha"],
+        properties: {
+          nome: { type: "string", example: "Ana Silva" },
+          email: { type: "string", format: "email", example: "ana@biblioteca.local" },
+          senha: { type: "string", minLength: 8, example: "Senha@123" }
+        }
+      },
+      AuthLoginInput: {
+        type: "object",
+        required: ["email", "senha"],
+        properties: {
+          email: { type: "string", format: "email", example: "ana@biblioteca.local" },
+          senha: { type: "string", example: "Senha@123" }
+        }
+      },
+      AuthResponse: {
+        type: "object",
+        properties: {
+          token: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+          usuario: { $ref: "#/components/schemas/UsuarioResponse" }
         }
       },
       EmprestimoInput: {
@@ -75,6 +123,55 @@ const swaggerDefinition = {
     }
   },
   paths: {
+    "/auth/register": {
+      post: {
+        summary: "Registrar novo usuário",
+        description: "Cria conta de usuário com senha e retorna JWT de autenticação.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AuthRegisterInput" }
+            }
+          }
+        },
+        responses: {
+          "201": { description: "Registrado com sucesso" },
+          "400": { description: "Requisição inválida" },
+          "409": { description: "Email já cadastrado" }
+        }
+      }
+    },
+    "/auth/login": {
+      post: {
+        summary: "Autenticar usuário",
+        description: "Realiza login com email e senha e retorna JWT.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AuthLoginInput" }
+            }
+          }
+        },
+        responses: {
+          "200": { description: "Autenticado com sucesso" },
+          "400": { description: "Requisição inválida" },
+          "401": { description: "Credenciais inválidas" }
+        }
+      }
+    },
+    "/auth/me": {
+      get: {
+        summary: "Consultar usuário autenticado",
+        description: "Retorna os dados do usuário autenticado a partir do token JWT.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": { description: "Sucesso" },
+          "401": { description: "Não autorizado" }
+        }
+      }
+    },
     "/livros": {
       get: {
         summary: "Listar livros",
@@ -95,6 +192,7 @@ const swaggerDefinition = {
       post: {
         summary: "Criar livro",
         description: "Cria um novo livro no catálogo.",
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -106,6 +204,8 @@ const swaggerDefinition = {
         responses: {
           "201": { description: "Criado com sucesso" },
           "400": { description: "Requisição inválida" },
+          "401": { description: "Token ausente/inválido" },
+          "403": { description: "Apenas LIBRARIAN" },
           "404": { description: "Não encontrado" },
           "409": { description: "Conflito" }
         }
@@ -126,6 +226,7 @@ const swaggerDefinition = {
       put: {
         summary: "Atualizar livro",
         description: "Atualiza os dados de um livro existente.",
+        security: [{ bearerAuth: [] }],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         requestBody: {
           required: true,
@@ -138,6 +239,8 @@ const swaggerDefinition = {
         responses: {
           "200": { description: "Atualizado com sucesso" },
           "400": { description: "Requisição inválida" },
+          "401": { description: "Token ausente/inválido" },
+          "403": { description: "Apenas LIBRARIAN" },
           "404": { description: "Livro não encontrado" },
           "409": { description: "Conflito" }
         }
@@ -145,10 +248,13 @@ const swaggerDefinition = {
       delete: {
         summary: "Remover livro",
         description: "Realiza remoção lógica de um livro.",
+        security: [{ bearerAuth: [] }],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         responses: {
           "200": { description: "Removido com sucesso" },
           "400": { description: "Requisição inválida" },
+          "401": { description: "Token ausente/inválido" },
+          "403": { description: "Apenas LIBRARIAN" },
           "404": { description: "Livro não encontrado" },
           "409": { description: "Conflito" }
         }
@@ -179,6 +285,7 @@ const swaggerDefinition = {
         responses: {
           "201": { description: "Criado com sucesso" },
           "400": { description: "Requisição inválida" },
+          "401": { description: "Token ausente/inválido" },
           "404": { description: "Não encontrado" },
           "409": { description: "Conflito" }
         }
@@ -225,6 +332,7 @@ const swaggerDefinition = {
       post: {
         summary: "Criar empréstimo",
         description: "Cria um novo empréstimo com base no livro e usuário informados.",
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -245,9 +353,11 @@ const swaggerDefinition = {
       get: {
         summary: "Listar empréstimos ativos",
         description: "Retorna a lista de empréstimos com status ativo.",
+        security: [{ bearerAuth: [] }],
         responses: {
           "200": { description: "Sucesso" },
           "400": { description: "Requisição inválida" },
+          "401": { description: "Token ausente/inválido" },
           "404": { description: "Não encontrado" },
           "409": { description: "Conflito" }
         }
@@ -257,6 +367,7 @@ const swaggerDefinition = {
       post: {
         summary: "Registrar devolução",
         description: "Registra a devolução de um empréstimo ativo.",
+        security: [{ bearerAuth: [] }],
         parameters: [{ in: "path", name: "id", required: true, schema: { type: "string" } }],
         requestBody: {
           required: false,
@@ -270,6 +381,7 @@ const swaggerDefinition = {
           "200": { description: "Sucesso" },
           "201": { description: "Criado" },
           "400": { description: "Requisição inválida" },
+          "401": { description: "Token ausente/inválido" },
           "404": { description: "Empréstimo não encontrado" },
           "409": { description: "Conflito" }
         }

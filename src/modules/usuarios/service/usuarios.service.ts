@@ -3,6 +3,7 @@ import { CreateUsuarioDTO } from "../dto/usuarios.dto";
 import { EmprestimoEntity } from "../../emprestimos/domain/emprestimo.entity";
 import { IUsuariosRepository } from "../repository/usuarios.repository";
 import { AppError } from "../../../shared/errors/app-error";
+import { hashPassword } from "../../../shared/auth/password";
 
 export class UsuariosService {
   // Service depende apenas da interface de repositorio.
@@ -15,7 +16,24 @@ export class UsuariosService {
 
   // Encaminha criacao para persistencia.
   async createUsuario(payload: CreateUsuarioDTO): Promise<UsuarioEntity> {
-    return this.usuariosRepository.create(payload);
+    const existingUser = await this.usuariosRepository.findByEmail(payload.email);
+
+    if (existingUser) {
+      throw new AppError({
+        message: "Email ja cadastrado",
+        code: "EMAIL_JA_CADASTRADO",
+        statusCode: 409
+      });
+    }
+
+    const senha = await hashPassword(payload.senha);
+
+    return this.usuariosRepository.create({
+      nome: payload.nome,
+      email: payload.email,
+      senha,
+      role: payload.role ?? "USER"
+    });
   }
 
   // Busca usuario por ID.

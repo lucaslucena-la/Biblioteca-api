@@ -10,6 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  LIBRARIAN
+}
+
 // Entidade de persistencia para livros.
 model Livro {
   id                 String       @id @default(uuid())
@@ -38,6 +43,8 @@ model Usuario {
   id          String       @id @default(uuid())
   nome        String
   email       String       @unique
+  senha       String
+  role        Role         @default(USER)
   ativo       Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt

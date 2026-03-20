@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { authRouter } from "../../modules/auth/auth.routes";
 import { emprestimosRouter } from "../../modules/emprestimos/emprestimos.routes";
 import { livrosRouter } from "../../modules/livros/livros.routes";
 import { usuariosRouter } from "../../modules/usuarios/usuarios.routes";
@@ -18,5 +19,6 @@ mainRouter.get("/health", (_request, response) => {
 });
 
 mainRouter.use("/livros", livrosRouter);
+mainRouter.use("/auth", authRouter);
 mainRouter.use("/usuarios", usuariosRouter);
 mainRouter.use("/emprestimos", emprestimosRouter);

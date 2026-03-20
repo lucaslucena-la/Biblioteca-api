@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -61,16 +62,30 @@ async function upsertLivro(params: {
 async function main() {
   await prisma.emprestimo.deleteMany();
 
+  const senhaPadrao = await bcrypt.hash("Senha@123", 10);
+
   const ana = await prisma.usuario.upsert({
     where: { email: "ana@biblioteca.local" },
-    update: { nome: "Ana Silva", ativo: true },
-    create: { nome: "Ana Silva", email: "ana@biblioteca.local", ativo: true }
+    update: { nome: "Ana Silva", ativo: true, senha: senhaPadrao, role: "USER" } as never,
+    create: {
+      nome: "Ana Silva",
+      email: "ana@biblioteca.local",
+      senha: senhaPadrao,
+      role: "USER",
+      ativo: true
+    } as never
   });
 
   const bruno = await prisma.usuario.upsert({
     where: { email: "bruno@biblioteca.local" },
-    update: { nome: "Bruno Costa", ativo: true },
-    create: { nome: "Bruno Costa", email: "bruno@biblioteca.local", ativo: true }
+    update: { nome: "Bruno Costa", ativo: true, senha: senhaPadrao, role: "LIBRARIAN" } as never,
+    create: {
+      nome: "Bruno Costa",
+      email: "bruno@biblioteca.local",
+      senha: senhaPadrao,
+      role: "LIBRARIAN",
+      ativo: true
+    } as never
   });
 
   const livroAtivo = await upsertLivro({

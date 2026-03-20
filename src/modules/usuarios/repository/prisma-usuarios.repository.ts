@@ -1,9 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
-import { UsuarioEntity } from "../domain/usuario.entity";
-import { CreateUsuarioDTO } from "../dto/usuarios.dto";
+import { UsuarioAuthEntity, UsuarioEntity, UserRole } from "../domain/usuario.entity";
 import { EmprestimoEntity } from "../../emprestimos/domain/emprestimo.entity";
-import { IUsuariosRepository } from "./usuarios.repository";
+import { CreateUsuarioRepositoryDTO, IUsuariosRepository } from "./usuarios.repository";
 
 // Implementacao concreta do repositorio de usuarios usando Prisma.
 export class PrismaUsuariosRepository implements IUsuariosRepository {
@@ -14,6 +13,7 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     id: string;
     nome: string;
     email: string;
+    role?: UserRole;
     createdAt: Date;
     updatedAt: Date;
   }): UsuarioEntity {
@@ -21,6 +21,29 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
       id: model.id,
       nome: model.nome,
       email: model.email,
+      role: model.role ?? "USER",
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt
+    };
+  }
+
+  private toAuthEntity(model: {
+    id: string;
+    nome: string;
+    email: string;
+    senha?: string;
+    role?: UserRole;
+    ativo: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }): UsuarioAuthEntity {
+    return {
+      id: model.id,
+      nome: model.nome,
+      email: model.email,
+      senha: model.senha ?? "",
+      role: model.role ?? "USER",
+      ativo: model.ativo,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt
     };
@@ -81,12 +104,14 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
   }
 
   // Persiste novo usuario no banco de dados.
-  async create(payload: CreateUsuarioDTO): Promise<UsuarioEntity> {
+  async create(payload: CreateUsuarioRepositoryDTO): Promise<UsuarioEntity> {
     const usuario = await this.prismaClient.usuario.create({
       data: {
         nome: payload.nome,
-        email: payload.email
-      }
+        email: payload.email,
+        senha: payload.senha,
+        role: payload.role
+      } as never
     });
 
     return this.toEntity(usuario);
@@ -146,5 +171,21 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     });
 
     return emprestimos.map((emprestimo) => this.toEmprestimoEntity(emprestimo));
+  }
+
+  // Busca usuario por email ativo para autenticacao.
+  async findByEmail(email: string): Promise<UsuarioAuthEntity | null> {
+    const usuario = await this.prismaClient.usuario.findFirst({
+      where: {
+        email,
+        ativo: true
+      }
+    });
+
+    if (!usuario) {
+      return null;
+    }
+
+    return this.toAuthEntity(usuario);
   }
 }
